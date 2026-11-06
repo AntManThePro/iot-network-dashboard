@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+<link rel="manifest" href="/icons/manifest.json" />
+<title>IoT Network Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3F4F1; --surface:#FFFFFF; --surface-2:#EBEEE9; --surface-3:#E2E7E0;
+    --ink:#171B18; --ink-2:#3E4741; --muted:#68736B; --line:#D6DCD4; --line-strong:#BFC8BE;
+    --accent:#0F766E; --accent-strong:#0B5F58; --accent-soft:#D9ECE9;
+    --amber:#9A6206; --amber-bg:#FBF0D3; --amber-line:#E7CF8F;
+    --red:#A61B1B; --red-bg:#FBE3E0; --red-line:#EFBBB4;
+    --green:#1B7A3D; --green-bg:#DFF2E2;
+    --blue:#1D4E89; --blue-bg:#DEEAF7;
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans:'Public Sans', system-ui, -apple-system, Segoe UI, sans-serif;
+    --radius:12px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0C100E; --surface:#141916; --surface-2:#1A201C; --surface-3:#222A24;
+      --ink:#E8EDE9; --ink-2:#C3CCC5; --muted:#8E9A91; --line:#29312B; --line-strong:#3A453C;
+      --accent:#3EC9B6; --accent-strong:#7ADBCB; --accent-soft:#123B35;
+      --amber:#E8B84B; --amber-bg:#33270D; --amber-line:#5C4718;
+      --red:#F08080; --red-bg:#3A1714; --red-line:#6B2B24;
+      --green:#6FD598; --green-bg:#14301F;
+      --blue:#8FBBEC; --blue-bg:#16283F;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55}
+  a{color:var(--accent-strong)}
+  button{font-family:inherit;cursor:pointer}
+  input,select{font-family:inherit}
+  .wrap{max-width:1120px;margin:0 auto;padding:20px 16px 56px}
+  @media(min-width:760px){.wrap{padding:28px 24px 64px}}
+
+  /* Header */
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-strong);font-weight:700;margin:0 0 8px}
+  h1{font-size:32px;line-height:1.05;letter-spacing:-.02em;margin:0;font-weight:800}
+  @media(min-width:760px){h1{font-size:42px}}
+  .lede{color:var(--ink-2);font-size:16px;max-width:62ch;margin:12px 0 0}
+  .lede strong{color:var(--ink)}
+  .cmd{font-family:var(--mono);font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:14px;white-space:normal;word-break:break-word;color:var(--ink-2)}
+  .cmd b{color:var(--accent-strong);font-weight:700}
+
+  /* Drop zone */
+  .drop{margin-top:22px;background:var(--surface);border:1.5px dashed var(--line-strong);border-radius:var(--radius);padding:22px 18px;text-align:center;transition:border-color .15s, background .15s}
+  .drop.drag{border-color:var(--accent);background:var(--accent-soft)}
+  .drop-icon{width:46px;height:46px;margin:0 auto 10px;border-radius:10px;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent-strong)}
+  .drop h2{font-size:17px;margin:0 0 4px}
+  .drop p{color:var(--muted);margin:0 auto;max-width:56ch;font-size:14px}
+  .drop-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+  .btn{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:8px;padding:10px 16px;font-weight:600;font-size:14px;min-height:44px;display:inline-flex;align-items:center;gap:8px}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  @media (prefers-color-scheme: dark){.btn.primary{color:#06231F}}
+  .btn.small{min-height:36px;padding:6px 12px;font-size:13px}
+  .btn.danger{color:var(--red);border-color:var(--red-line)}
+  .filetypes{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+  .ft{font-family:var(--mono);font-size:11px;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:3px 9px;color:var(--ink-2)}
+  .ft b{color:var(--ink)}
+
+  /* File tray */
+  .tray{margin-top:14px;display:none}
+  .tray.show{display:block}
+  .tray-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+  .tray-head h3{font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:0;color:var(--muted);font-family:var(--mono)}
+  .chips{display:flex;flex-direction:column;gap:8px}
+  .chip{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .chip .dot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:7px;background:var(--accent)}
+  .chip.err .dot{background:var(--red)}
+  .chip .meta{flex:1;min-width:0}
+  .chip .name{font-family:var(--mono);font-size:13px;font-weight:700;word-break:break-all}
+  .chip .sub{font-size:12.5px;color:var(--muted)}
+  .chip .sub .bad{color:var(--red);font-weight:600}
+  .chip button{flex:none;border:none;background:none;color:var(--muted);font-size:18px;line-height:1;padding:4px 6px;min-width:32px;min-height:32px}
+  .parse-note{font-size:13px;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:8px;padding:9px 12px;margin-top:10px;display:none}
+  .parse-note.show{display:block}
+
+  /* Stats */
+  .stats{display:none;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px}
+  .stats.show{display:grid}
+  @media(min-width:760px){.stats{grid-template-columns:repeat(5,1fr)}}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .stat .n{font-family:var(--mono);font-size:28px;font-weight:700;line-height:1;letter-spacing:-.02em}
+  .stat .l{font-size:12px;color:var(--muted);margin-top:6px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+  .stat.alert .n{color:var(--red)}
+  .stat.warn .n{color:var(--amber)}
+
+  /* Tabs + controls */
+  .workbench{display:none;margin-top:22px}
+  .workbench.show{display:block}
+  .tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:none;border:none;background:none;padding:11px 14px;font-size:14.5px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;min-height:44px}
+  .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+  .tab .count{font-family:var(--mono);font-size:11px;background:var(--surface-3);border-radius:999px;padding:1px 7px;margin-left:5px;color:var(--ink-2)}
+  .panel{display:none;padding-top:18px}
+  .panel.active{display:block}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .controls input[type="search"]{flex:1 1 200px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:8px;padding:10px 12px;font-size:14px;min-height:44px}
+  .controls select{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:8px;padding:10px;font-size:14px;min-height:44px}
+  .controls label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+
+  h2.sec{font-size:19px;margin:26px 0 6px;letter-spacing:-.01em}
+  h2.sec:first-child{margin-top:0}
+  .sec-sub{color:var(--muted);font-size:13.5px;margin:0 0 12px}
+
+  /* Host cards */
+  .hosts{display:flex;flex-direction:column;gap:10px}
+  .host{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .host-head{width:100%;text-align:left;border:none;background:none;color:var(--ink);padding:14px;display:flex;gap:12px;align-items:flex-start;min-height:52px}
+  .host-head .ip{font-family:var(--mono);font-weight:700;font-size:16px;word-break:break-all}
+  .host-head .hn{font-size:13px;color:var(--muted);word-break:break-word}
+  .host-head .right{margin-left:auto;text-align:right;flex:none}
+  .host-head .pcount{font-family:var(--mono);font-size:13px;font-weight:700}
+  .host-head .chev{color:var(--muted);font-size:13px}
+  .host-body{display:none;border-top:1px solid var(--line);padding:12px 14px 14px}
+  .host.open .host-body{display:block}
+  .kv{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 16px;font-size:13px;margin-bottom:12px}
+  @media(min-width:760px){.kv{grid-template-columns:repeat(4,1fr)}}
+  .kv .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+  .kv .v{font-family:var(--mono);font-size:12.5px;word-break:break-word;margin-top:1px}
+  .badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+  .badge{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.03em;border-radius:5px;padding:2px 7px;text-transform:uppercase}
+  .badge.up{background:var(--green-bg);color:var(--green)}
+  .badge.down{background:var(--surface-3);color:var(--muted)}
+  .badge.new{background:var(--blue-bg);color:var(--blue)}
+  .badge.gone{background:var(--red-bg);color:var(--red)}
+  .badge.src{background:var(--surface-2);color:var(--muted);text-transform:none;font-weight:500}
+
+  table.ports{width:100%;border-collapse:collapse;font-size:13px}
+  table.ports th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:6px 8px 6px 0;border-bottom:1px solid var(--line)}
+  table.ports td{padding:7px 8px 7px 0;border-bottom:1px solid var(--line);vertical-align:top}
+  table.ports tr:last-child td{border-bottom:none}
+  .mono{font-family:var(--mono)}
+  .risk{font-family:var(--mono);font-size:10.5px;font-weight:700;border-radius:5px;padding:2px 7px;white-space:nowrap}
+  .risk.high{background:var(--red-bg);color:var(--red)}
+  .risk.med{background:var(--amber-bg);color:var(--amber)}
+  .risk.low{background:var(--surface-2);color:var(--muted)}
+  .script-out{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);background:var(--surface-2);border-radius:6px;padding:7px 9px;margin-top:5px;white-space:pre-wrap;word-break:break-word}
+  .script-out b{color:var(--ink)}
+  .noports{font-size:13px;color:var(--muted);font-style:italic}
+
+  /* Overview lists */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .card + .card{margin-top:12px}
+  .card h3{margin:0 0 4px;font-size:15.5px}
+  .card .sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+  .bar-row{display:grid;grid-template-columns:110px 1fr 34px;gap:10px;align-items:center;font-size:13px;padding:4px 0}
+  .bar-row .svc{font-family:var(--mono);font-weight:600;word-break:break-all}
+  .bar-track{height:9px;background:var(--surface-3);border-radius:99px;overflow:hidden}
+  .bar-fill{height:100%;background:var(--accent);border-radius:99px;min-width:3px}
+  .bar-row .c{font-family:var(--mono);text-align:right;color:var(--muted)}
+  .flag-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+  .flag-row:last-child{border-bottom:none;padding-bottom:0}
+  .flag-row:first-of-type{padding-top:2px}
+  .flag-row .txt{flex:1;min-width:0;font-size:13.5px}
+  .flag-row .txt .where{font-family:var(--mono);font-size:12px;color:var(--muted);word-break:break-word}
+  .empty-note{color:var(--muted);font-size:14px;background:var(--surface);border:1px dashed var(--line-strong);border-radius:var(--radius);padding:18px;text-align:center}
+
+  /* Changes */
+  .diff-pick{display:grid;gap:10px;margin-bottom:16px}
+  @media(min-width:700px){.diff-pick{grid-template-columns:1fr auto 1fr;align-items:end}}
+  .diff-pick label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block;margin-bottom:5px}
+  .diff-pick select{width:100%;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:8px;padding:10px;font-size:13.5px;font-family:var(--mono);min-height:44px}
+  .diff-arrow{text-align:center;color:var(--muted);font-family:var(--mono);padding-bottom:12px}
+  .diff-group{margin-bottom:18px}
+  .diff-group h3{font-size:14px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+  .diff-item{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:8px;font-size:13.5px}
+  .diff-item .ports-line{font-family:var(--mono);font-size:12.5px;margin-top:3px;word-break:break-word}
+  .ok-box{background:var(--green-bg);border-radius:10px;padding:13px 15px;font-size:14px;font-weight:600}
+
+  /* Report */
+  .report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  pre.report{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;font-family:var(--mono);font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:70vh;overflow:auto;margin:0}
+  .raw-report{margin-top:14px}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:all .2s;z-index:50;max-width:90vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  footer{margin-top:36px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:12.5px}
+  footer .mono{font-size:11.5px}
+  .hidden-file{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">iot-analysis · scan file viewer</p>
+  <h1>IoT Network Dashboard</h1>
+  <p class="lede">Drop in the files your scripts already produce — <strong>profile_*.xml</strong>, <strong>hosts_*.gnmap</strong>, <strong>live_hosts.txt</strong>, <strong>baseline.json</strong> — and get the inventory, the risky ports, and the changes, without reading raw nmap output.</p>
+  <div class="cmd"><b>$</b> ls ~/iot-analysis &nbsp;→&nbsp; profile_192.168.1.10.xml · hosts_20261105_020000.gnmap · live_hosts.txt · baseline.json · report_20261105.txt</div>
+
+  <!-- Upload -->
+  <section class="drop" id="dropZone" aria-label="Load scan files">
+    <div class="drop-icon" aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <h2>Drop your scan files here</h2>
+    <p>Load one night's output or several scans at once. Two scans (or a scan + baseline.json) unlock the Changes tab. Files are parsed on this device only — nothing is uploaded anywhere.</p>
+    <div class="drop-actions">
+      <button class="btn primary" id="pickFilesBtn" type="button">Choose files</button>
+      <button class="btn" id="pickFolderBtn" type="button">Choose whole folder</button>
+    </div>
+    <div class="filetypes">
+      <span class="ft"><b>.xml</b> profile scans</span>
+      <span class="ft"><b>.gnmap</b> discovery</span>
+      <span class="ft"><b>.txt</b> live_hosts / report</span>
+      <span class="ft"><b>.json</b> baseline</span>
+      <span class="ft"><b>.nmap</b> text output</span>
+    </div>
+    <input class="hidden-file" type="file" id="fileInput" multiple accept=".xml,.gnmap,.txt,.json,.nmap">
+    <input class="hidden-file" type="file" id="folderInput" webkitdirectory multiple>
+  </section>
+
+  <!-- Loaded files -->
+  <section class="tray" id="tray" aria-label="Loaded files">
+    <div class="tray-head">
+      <h3>Loaded files</h3>
+      <button class="btn small danger" id="clearBtn" type="button">Clear all</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="parse-note" id="parseNote" role="status"></div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats" id="stats" aria-label="Summary">
+    <div class="stat"><div class="n" id="stHosts">0</div><div class="l">Hosts found</div></div>
+    <div class="stat"><div class="n" id="stUp">0</div><div class="l">Confirmed up</div></div>
+    <div class="stat"><div class="n" id="stPorts">0</div><div class="l">Open ports</div></div>
+    <div class="stat warn"><div class="n" id="stWatch">0</div><div class="l">Watchlist ports</div></div>
+    <div class="stat alert"><div class="n" id="stHigh">0</div><div class="l">High-risk ports</div></div>
+  </section>
+
+  <!-- Workbench -->
+  <section class="workbench" id="workbench">
+    <div class="tabs" role="tablist" aria-label="Dashboard views">
+      <button class="tab" role="tab" aria-selected="true" data-tab="overview" type="button">Overview</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="hosts" type="button">Hosts<span class="count" id="hostCount">0</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="changes" type="button">Changes<span class="count" id="changeCount">–</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="report" type="button">Report</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="panel active" id="panel-overview" role="tabpanel">
+      <div class="card" id="flagCard">
+        <h3>Needs a look</h3>
+        <p class="sub">Open ports on protocols that are plaintext, unauthenticated, or commonly abused on IoT gear — the same set analyze.sh probes (SNMP, UPnP, MQTT, HTTP admin).</p>
+        <div id="flagList"></div>
+      </div>
+      <div class="card">
+        <h3>Services across the network</h3>
+        <p class="sub">Every open port in the loaded scans, grouped by the service nmap identified.</p>
+        <div id="svcBars"></div>
+      </div>
+      <div class="card">
+        <h3>IoT protocol watchlist</h3>
+        <p class="sub">The port set profile.sh scans for: DNS, DHCP, SNMP, UPnP, mDNS, MQTT and friends.</p>
+        <div id="watchList"></div>
+      </div>
+    </div>
+
+    <!-- HOSTS -->
+    <div class="panel" id="panel-hosts" role="tabpanel">
+      <div class="controls">
+        <input type="search" id="hostSearch" placeholder="Search IP, hostname, service, vendor…" aria-label="Search hosts">
+        <select id="hostFilter" aria-label="Filter hosts">
+          <option value="all">All hosts</option>
+          <option value="flagged">Flagged only</option>
+          <option value="up">Confirmed up only</option>
+          <option value="withports">With open ports</option>
+        </select>
+        <select id="hostSort" aria-label="Sort hosts">
+          <option value="ip">Sort: IP address</option>
+          <option value="ports">Sort: most open ports</option>
+          <option value="risk">Sort: highest risk</option>
+        </select>
+      </div>
+      <div class="hosts" id="hostList"></div>
+      <div class="empty-note" id="hostEmpty" style="display:none">No hosts match that search or filter.</div>
+    </div>
+
+    <!-- CHANGES -->
+    <div class="panel" id="panel-changes" role="tabpanel">
+      <div id="diffReady">
+        <div class="diff-pick">
+          <div><label for="baseSel">Baseline</label><select id="baseSel"></select></div>
+          <div class="diff-arrow">─── vs ───▶</div>
+          <div><label for="curSel">Compare against</label><select id="curSel"></select></div>
+        </div>
+        <div id="diffOut"></div>
+      </div>
+      <div class="empty-note" id="diffEmpty" style="display:none">
+        Changes need two things to compare: load <span class="mono">baseline.json</span> plus a profile scan, or load two different scans (for example last night's and tonight's <span class="mono">profile_*.xml</span>). This is the same comparison diff_scan.py runs — new ports, closed ports, new and missing hosts.
+      </div>
+    </div>
+
+    <!-- REPORT -->
+    <div class="panel" id="panel-report" role="tabpanel">
+      <div class="report-actions">
+        <button class="btn primary small" id="dlReportBtn" type="button">Download report (.txt)</button>
+        <button class="btn small" id="copyReportBtn" type="button">Copy report</button>
+      </div>
+      <pre class="report" id="reportPre"></pre>
+      <div id="rawReports"></div>
+    </div>
+  </section>
+
+  <div class="empty-note" id="startEmpty" style="margin-top:20px">
+    Nothing loaded yet. Run <span class="mono">master.sh</span> on the machine on your LAN, then drop the output files from its folder here — start with the <span class="mono">profile_*.xml</span> files for the full picture.
+  </div>
+
+  <footer>
+    Companion viewer for the iot-analysis scripts (discovery.sh · profile.sh · analyze.sh · diff_scan.py · report.py). The scans still run on a machine on the network — this page reads their output files.
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Watchlist / risk model ---------- */
+var WATCH = {
+  "21/tcp":  {label:"FTP", level:"high", why:"Plaintext file transfer — credentials and files cross the network in the clear."},
+  "23/tcp":  {label:"Telnet", level:"high", why:"Plaintext remote shell. The single most abused IoT service — should be off."},
+  "53/udp":  {label:"DNS", level:"med", why:"DNS responder. Fine on your router; worth a look on a random IoT device."},
+  "53/tcp":  {label:"DNS", level:"med", why:"DNS responder over TCP."},
+  "67/udp":  {label:"DHCP", level:"med", why:"DHCP server port. Only your router should answer DHCP — a second one is a red flag."},
+  "68/udp":  {label:"DHCP client", level:"low", why:"DHCP client port, normal on most devices."},
+  "80/tcp":  {label:"HTTP admin", level:"med", why:"Web interface over plain HTTP — login page and credentials are unencrypted."},
+  "161/udp": {label:"SNMP", level:"high", why:"SNMP can leak device details (model, firmware, sometimes config). analyze.sh probes this with snmp-info."},
+  "443/tcp":  {label:"HTTPS", level:"low", why:"Web interface over HTTPS — the expected way to expose an admin UI."},
+  "445/tcp":  {label:"SMB", level:"high", why:"Windows file sharing. A long history of wormable flaws; unexpected on IoT gear."},
+  "1883/tcp":{label:"MQTT", level:"high", why:"MQTT broker on the plaintext port — often accepts anonymous connections. analyze.sh tests this with mqtt-subscribe."},
+  "1900/udp":{label:"UPnP", level:"high", why:"UPnP lets devices punch holes in the router and describe themselves to anyone who asks. analyze.sh probes this with upnp-info."},
+  "3389/tcp":{label:"RDP", level:"high", why:"Remote Desktop exposed on a LAN device — a prime brute-force target."},
+  "5353/udp":{label:"mDNS", level:"med", why:"Multicast DNS (Bonjour). Broadcasts device names and services to the whole LAN."},
+  "5900/tcp":{label:"VNC", level:"high", why:"VNC remote display, frequently weak or no password on embedded gear."},
+  "7547/tcp":{label:"TR-069", level:"high", why:"ISP remote-management port with a bad exploitation history on routers and modems."},
+  "8080/tcp":{label:"HTTP alt", level:"med", why:"Alternate web interface — check whether it's an admin panel on plain HTTP."},
+  "8883/tcp":{label:"MQTT/TLS", level:"low", why:"MQTT over TLS — the encrypted broker port, as it should be."}
+};
+function portKey(p){ return p.port + "/" + p.protocol; }
+function watchInfo(p){ return WATCH[portKey(p)] || null; }
+function riskOf(p){
+  var w = watchInfo(p);
+  if (w) return w.level;
+  return "low";
+}
+function riskScore(host){
+  var s = 0;
+  host.ports.forEach(function(p){
+    var r = riskOf(p);
+    if (r === "high") s += 10; else if (r === "med") s += 3; else s += 0.5;
+  });
+  return s;
+}
+function ipNum(ip){
+  var parts = String(ip).split(".");
+  if (parts.length !== 4) return Number.MAX_SAFE_INTEGER;
+  var n = 0;
+  for (var i=0;i<4;i++){ var v = parseInt(parts[i],10); if (isNaN(v)) return Number.MAX_SAFE_INTEGER; n = n*256 + v; }
+  return n;
+}
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+
+/* ---------- State ---------- */
+var datasets = [];      // {id, fileName, kind:'xml'|'gnmap'|'baseline', hosts:Map, loadedAt}
+var liveSet = {};       // ip -> true (from live_hosts.txt or gnmap Status: Up)
+var liveSources = [];   // file names that fed liveSet
+var reportFiles = [];   // {name, text}
+var fileChips = [];     // {name, kindLabel, detail, error}
+var nextId = 1;
+var generatedAt = null;
+
+function newHost(ip){
+  return { ip:ip, hostname:"", mac:"", vendor:"", status:"", os:"", osDetails:"", distance:"", uptime:"",
+           ports:{}, portList:[], hostScripts:[], sources:[] };
+}
+function addPort(host, p){
+  var k = portKey(p);
+  var ex = host.ports[k];
+  if (!ex){ host.ports[k] = p; }
+  else {
+    // merge: keep richest service info
+    if (!ex.service && p.service) ex.service = p.service;
+    if (!ex.product && p.product) ex.product = p.product;
+    if (!ex.version && p.version) ex.version = p.version;
+    if (!ex.extrainfo && p.extrainfo) ex.extrainfo = p.extrainfo;
+    if (p.scripts && p.scripts.length) ex.scripts = (ex.scripts||[]).concat(p.scripts);
+    if (p.state === "open") ex.state = "open";
+  }
+}
+function finalizeHost(host){
+  host.portList = Object.keys(host.ports).map(function(k){ return host.ports[k]; })
+    .sort(function(a,b){ return (a.port-b.port) || (a.protocol<b.protocol?-1:1); });
+  return host;
+}
+
+/* ---------- Parsers ---------- */
+function parseNmapXML(text){
+  var doc = new DOMParser().parseFromString(text, "text/xml");
+  if (doc.querySelector("parsererror")) throw new Error("Not valid XML");
+  var root = doc.documentElement;
+  if (!root || root.tagName !== "nmaprun") throw new Error("XML is not an nmap scan (no <nmaprun> root)");
+  var hosts = {};
+  var runStats = "";
+  var startStr = root.getAttribute("startstr") || "";
+  doc.querySelectorAll("host").forEach(function(hEl){
+    var addrEl = hEl.querySelector('address[addrtype="ipv4"], address[addrtype="ipv6"]') || hEl.querySelector("address");
+    if (!addrEl) return;
+    var ip = addrEl.getAttribute("addr");
+    var host = hosts[ip] || (hosts[ip] = newHost(ip));
+    var st = hEl.querySelector("status");
+    if (st) host.status = st.getAttribute("state") || host.status;
+    hEl.querySelectorAll("address").forEach(function(a){
+      if (a.getAttribute("addrtype") === "mac"){
+        host.mac = a.getAttribute("addr") || "";
+        host.vendor = a.getAttribute("vendor") || "";
+      }
+    });
+    var hn = hEl.querySelector("hostnames hostname");
+    if (hn && !host.hostname) host.hostname = hn.getAttribute("name") || "";
+    var osMatch = hEl.querySelector("os osmatch");
+    if (osMatch && !host.os) host.os = osMatch.getAttribute("name") || "";
+    var osClass = hEl.querySelector("os osmatch osclass") || hEl.querySelector("os osclass");
+    if (osClass && !host.osDetails){
+      var bits = [osClass.getAttribute("vendor"), osClass.getAttribute("osfamily"), osClass.getAttribute("osgen"), osClass.getAttribute("type")].filter(Boolean);
+      host.osDetails = bits.join(" · ");
+    }
+    var dist = hEl.querySelector("distance");
+    if (dist) host.distance = dist.getAttribute("value") || "";
+    var up = hEl.querySelector("uptime");
+    if (up) host.uptime = up.getAttribute("seconds") || "";
+    hEl.querySelectorAll("ports > port").forEach(function(pEl){
+      var stateEl = pEl.querySelector("state");
+      var svcEl = pEl.querySelector("service");
+      var p = {
+        port: parseInt(pEl.getAttribute("portid"),10),
+        protocol: pEl.getAttribute("protocol") || "tcp",
+        state: stateEl ? (stateEl.getAttribute("state") || "") : "",
+        service: svcEl ? (svcEl.getAttribute("name") || "") : "",
+        product: svcEl ? (svcEl.getAttribute("product") || "") : "",
+        version: svcEl ? (svcEl.getAttribute("version") || "") : "",
+        extrainfo: svcEl ? (svcEl.getAttribute("extrainfo") || "") : "",
+        method: svcEl ? (svcEl.getAttribute("method") || "") : "",
+        scripts: []
+      };
+      if (isNaN(p.port)) return;
+      pEl.querySelectorAll("script").forEach(function(s){
+        p.scripts.push({ id: s.getAttribute("id") || "", output: s.getAttribute("output") || "" });
+      });
+      addPort(host, p);
+    });
+    hEl.querySelectorAll("hostscript script").forEach(function(s){
+      host.hostScripts.push({ id: s.getAttribute("id") || "", output: s.getAttribute("output") || "" });
+    });
+  });
+  Object.keys(hosts).forEach(function(ip){ finalizeHost(hosts[ip]); });
+  return { hosts: hosts, startStr: startStr };
+}
+
+function parseGnmap(text){
+  var hosts = {};
+  text.split(/\r?\n/).forEach(function(line){
+    var m = line.match(/^Host:\s+(\S+)\s+\(([^)]*)\)\s*(.*)$/);
+    if (!m) return;
+    var ip = m[1], host = hosts[ip] || (hosts[ip] = newHost(ip));
+    if (m[2] && !host.hostname) host.hostname = m[2];
+    var rest = m[3] || "";
+    if (/Status:\s*Up/i.test(rest)){ host.status = "up"; liveSet[ip] = true; }
+    if (/Status:\s*Down/i.test(rest)) host.status = "down";
+    var pm = rest.match(/Ports:\s*(.+?)(?:\t|Ignored State:|$)/);
+    if (pm){
+      pm[1].split(",").forEach(function(chunk){
+        var f = chunk.trim().split("/");
+        if (f.length < 5) return;
+        var port = parseInt(f[0],10);
+        if (isNaN(port)) return;
+        addPort(host, { port:port, protocol:f[2]||"tcp", state:f[1]||"", service:f[4]||"", product:"", version:"", extrainfo:"", method:"", scripts:[] });
+      });
+    }
+    var osM = rest.match(/OS:\s*([^\t]+)/);
+    if (osM && !host.os) host.os = osM[1].trim();
+  });
+  Object.keys(hosts).forEach(function(ip){ finalizeHost(hosts[ip]); });
+  return { hosts: hosts };
+}
+
+function parseBaselineJSON(text){
+  var data = JSON.parse(text);
+  var hosts = {};
+  Object.keys(data).forEach(function(ip){
+    var host = newHost(ip);
+    host.status = "up";
+    var entry = data[ip];
+    var portsObj = Array.isArray(entry) ? null : entry;
+    if (portsObj && typeof portsObj === "object"){
+      // allow either {portid:{...}} or {ports:{portid:{...}}} or {ports:[...]}
+      var po = portsObj.ports && typeof portsObj.ports === "object" ? portsObj.ports : portsObj;
+      if (Array.isArray(po)){
+        po.forEach(function(pp){
+          var port = parseInt(pp.portid || pp.port,10);
+          if (isNaN(port)) return;
+          addPort(host, { port:port, protocol:pp.protocol||"tcp", state:"open", service:pp.service||"", product:"", version:pp.version||"", extrainfo:"", method:"", scripts:[] });
+        });
+      } else {
+        Object.keys(po).forEach(function(pid){
+          var pp = po[pid];
+          if (!pp || typeof pp !== "object") return;
+          var port = parseInt(pid,10);
+          if (isNaN(port)) return;
+          addPort(host, { port:port, protocol:pp.protocol||"tcp", state:"open", service:pp.service||"", product:"", version:pp.version||"", extrainfo:"", method:"", scripts:[] });
+        });
+      }
+      if (portsObj.hostname) host.hostname = portsObj.hostname;
+    }
+    hosts[ip] = finalizeHost(host);
+  });
+  return { hosts: hosts };
+}
+
+function parseLiveHosts(text){
+  var ips = [];
+  text.split(/\r?\n/).forEach(function(line){
+    var t = line.trim();
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(t) || /^[0-9a-fA-F:]{3,}$/.test(t) && t.indexOf(":")>-1) ips.push(t);
+  });
+  return ips;
+}
+
+function parseNmapText(text){
+  // profile .nmap text output: "Nmap scan report for 192.168.1.1" blocks
+  var hosts = {};
+  var blocks = text.split(/^Nmap scan report for /m);
+  blocks.forEach(function(block, idx){
+    if (idx === 0 && !/^\S/.test(block)) { /* preamble */ }
+    var firstLine = block.split("\n")[0] || "";
+    var ipM = firstLine.match(/(\d{1,3}(?:\.\d{1,3}){3})/);
+    if (!ipM) return;
+    var ip = ipM[1];
+    var host = hosts[ip] || (hosts[ip] = newHost(ip));
+    var hnM = firstLine.match(/^(.+?)\s*\(/);
+    if (hnM && !/\d+\.\d+/.test(hnM[1])) host.hostname = hnM[1].trim();
+    if (/Host is up/.test(block)) host.status = "up";
+    var macM = block.match(/MAC Address:\s*([0-9A-Fa-f:]+)(?:\s*\(([^)]*)\))?/);
+    if (macM){ host.mac = macM[1]; if (macM[2]) host.vendor = macM[2]; }
+    var osM = block.match(/OS details:\s*(.+)/) || block.match(/Running:\s*(.+)/);
+    if (osM && !host.os) host.os = osM[1].trim();
+    block.split(/\r?\n/).forEach(function(line){
+      var pm = line.match(/^(\d+)\/(tcp|udp)\s+(\S+)\s+(\S+)\s*(.*)$/);
+      if (pm){
+        addPort(host, { port:parseInt(pm[1],10), protocol:pm[2], state:pm[3], service:pm[4], product:"", version:(pm[5]||"").trim(), extrainfo:"", method:"", scripts:[] });
+      }
+    });
+  });
+  Object.keys(hosts).forEach(function(ip){ finalizeHost(hosts[ip]); });
+  return { hosts: hosts };
+}
+
+/* ---------- File intake ---------- */
+function classify(name){
+  var n = name.toLowerCase();
+  if (n.endsWith(".xml")) return "xml";
+  if (n.endsWith(".gnmap")) return "gnmap";
+  if (n.endsWith(".json")) return "baseline";
+  if (n.endsWith(".nmap")) return "nmap";
+  if (n.endsWith(".txt")){
+    if (n.indexOf("live_hosts") > -1) return "live";
+    if (n.indexOf("report") > -1) return "report";
+    return "text-unknown";
+  }
+  return "unknown";
+}
+
+function handleFile(file){
+  return file.text().then(function(text){
+    var name = file.name;
+    var kind = classify(name);
+    var chip = { name:name, kindLabel:"", detail:"", error:"" };
+    try {
+      if (kind === "xml"){
+        var r = parseNmapXML(text);
+        var n = Object.keys(r.hosts).length;
+        if (!n){ chip.error = "Parsed, but it contains no hosts."; }
+        datasets.push({ id:nextId++, fileName:name, kind:"xml", hosts:r.hosts, startStr:r.startStr });
+        chip.kindLabel = "Profile scan (nmap XML)";
+        chip.detail = n + (n===1?" host":" hosts") + (r.startStr ? " · scanned " + r.startStr : "");
+      } else if (kind === "gnmap"){
+        var g = parseGnmap(text);
+        var gn = Object.keys(g.hosts).length;
+        datasets.push({ id:nextId++, fileName:name, kind:"gnmap", hosts:g.hosts, startStr:"" });
+        chip.kindLabel = "Discovery scan (gnmap)";
+        chip.detail = gn + (gn===1?" host":" hosts") + " · live hosts from this file count as confirmed up";
+        if (liveSources.indexOf(name) === -1) liveSources.push(name);
+      } else if (kind === "baseline"){
+        var b = parseBaselineJSON(text);
+        var bn = Object.keys(b.hosts).length;
+        datasets.push({ id:nextId++, fileName:name, kind:"baseline", hosts:b.hosts, startStr:"" });
+        chip.kindLabel = "Baseline (diff_scan.py)";
+        chip.detail = bn + (bn===1?" host":" hosts") + " in baseline — use it in the Changes tab";
+      } else if (kind === "live"){
+        var ips = parseLiveHosts(text);
+        ips.forEach(function(ip){ liveSet[ip] = true; });
+        if (liveSources.indexOf(name) === -1) liveSources.push(name);
+        chip.kindLabel = "Live hosts list";
+        chip.detail = ips.length + (ips.length===1?" host":" hosts") + " marked up";
+        if (!ips.length) chip.error = "No IP addresses found in this file.";
+      } else if (kind === "report"){
+        reportFiles.push({ name:name, text:text });
+        chip.kindLabel = "Report (report.py output)";
+        chip.detail = "Shown at the bottom of the Report tab";
+      } else if (kind === "nmap"){
+        var t = parseNmapText(text);
+        var tn = Object.keys(t.hosts).length;
+        if (!tn){ chip.error = "No host blocks found — is this nmap text output?"; }
+        datasets.push({ id:nextId++, fileName:name, kind:"nmap", hosts:t.hosts, startStr:"" });
+        chip.kindLabel = "Scan (nmap text output)";
+        chip.detail = tn + (tn===1?" host":" hosts");
+      } else if (kind === "text-unknown"){
+        // Sniff: IP list, report text, or gnmap in disguise
+        if (/^Host:\s+\d/.test(text)){
+          var g2 = parseGnmap(text);
+          datasets.push({ id:nextId++, fileName:name, kind:"gnmap", hosts:g2.hosts, startStr:"" });
+          chip.kindLabel = "Discovery scan (gnmap format)";
+          chip.detail = Object.keys(g2.hosts).length + " hosts";
+          if (liveSources.indexOf(name) === -1) liveSources.push(name);
+        } else if (/IoT Network Analysis Report/.test(text) || /^Host:\s/m.test(text) && /Open Ports/.test(text)){
+          reportFiles.push({ name:name, text:text });
+          chip.kindLabel = "Report (report.py output)";
+          chip.detail = "Shown at the bottom of the Report tab";
+        } else {
+          var ips2 = parseLiveHosts(text);
+          if (ips2.length){
+            ips2.forEach(function(ip){ liveSet[ip] = true; });
+            if (liveSources.indexOf(name) === -1) liveSources.push(name);
+            chip.kindLabel = "Live hosts list";
+            chip.detail = ips2.length + " IP addresses marked up";
+          } else {
+            chip.error = "Couldn't recognise this .txt — expected a live_hosts list or a report_*.txt.";
+          }
+        }
+      } else {
+        chip.error = "File type not recognised — use .xml, .gnmap, .txt, .json or .nmap from the iot-analysis folder.";
+      }
+    } catch(e){
+      chip.error = "Couldn't parse: " + e.message;
+    }
+    fileChips.push(chip);
+  }).catch(function(){
+    fileChips.push({ name:file.name, kindLabel:"", detail:"", error:"Browser couldn't read this file." });
+  });
+}
+
+/* ---------- Merged inventory ---------- */
+function mergedHosts(){
+  var map = {};
+  datasets.forEach(function(ds){
+    Object.keys(ds.hosts).forEach(function(ip){
+      var src = ds.hosts[ip];
+      var h = map[ip];
+      if (!h){ h = map[ip] = newHost(ip); }
+      if (src.hostname && !h.hostname) h.hostname = src.hostname;
+      if (src.mac && !h.mac) h.mac = src.mac;
+      if (src.vendor && !h.vendor) h.vendor = src.vendor;
+      if (src.os && !h.os) h.os = src.os;
+      if (src.osDetails && !h.osDetails) h.osDetails = src.osDetails;
+      if (src.distance && !h.distance) h.distance = src.distance;
+      if (src.uptime && !h.uptime) h.uptime = src.uptime;
+      if (src.status === "up") h.status = "up"; else if (!h.status) h.status = src.status;
+      src.portList.forEach(function(p){ addPort(h, JSON.parse(JSON.stringify(p))); });
+      src.hostScripts.forEach(function(s){ h.hostScripts.push(s); });
+      if (h.sources.indexOf(ds.fileName) === -1) h.sources.push(ds.fileName);
+    });
+  });
+  // live_hosts overlay: hosts known up but never profiled still get a row
+  Object.keys(liveSet).forEach(function(ip){
+    if (!map[ip]){
+      var h = newHost(ip); h.status = "up"; h.sources = liveSources.slice();
+      map[ip] = h;
+    } else if (liveSet[ip]) {
+      map[ip].status = "up";
+    }
+  });
+  var list = Object.keys(map).map(function(ip){ return finalizeHost(map[ip]); });
+  list.sort(function(a,b){ return ipNum(a.ip)-ipNum(b.ip); });
+  return list;
+}
+function openPorts(host){ return host.portList.filter(function(p){ return p.state === "open"; }); }
+
+/* ---------- Rendering ---------- */
+var $ = function(id){ return document.getElementById(id); };
+var toastTimer = null;
+function toast(msg){
+  var t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2600);
+}
+
+function renderChips(){
+  var tray = $("tray");
+  tray.classList.toggle("show", fileChips.length > 0);
+  var html = "";
+  fileChips.forEach(function(c, i){
+    html += '<div class="chip' + (c.error ? " err" : "") + '"><span class="dot"></span><div class="meta">' +
+      '<div class="name">' + esc(c.name) + '</div>' +
+      '<div class="sub">' + (c.error ? '<span class="bad">' + esc(c.error) + '</span>' : esc(c.kindLabel) + (c.detail ? " · " + esc(c.detail) : "")) + '</div></div>' +
+      '<button type="button" data-remove="' + i + '" aria-label="Remove ' + esc(c.name) + '">×</button></div>';
+  });
+  $("chips").innerHTML = html;
+  var errs = fileChips.filter(function(c){ return !!c.error; }).length;
+  var note = $("parseNote");
+  if (errs){
+    note.textContent = errs + (errs===1 ? " file couldn't" : " files couldn't") + " be used — see the note under each name above. The rest loaded fine.";
+    note.classList.add("show");
+  } else note.classList.remove("show");
+}
+
+function renderStats(hosts){
+  var totalPorts = 0, watch = 0, high = 0, up = 0;
+  hosts.forEach(function(h){
+    if (h.status === "up") up++;
+    openPorts(h).forEach(function(p){
+      totalPorts++;
+      if (watchInfo(p)) watch++;
+      if (riskOf(p) === "high") high++;
+    });
+  });
+  $("stHosts").textContent = hosts.length;
+  $("stUp").textContent = up;
+  $("stPorts").textContent = totalPorts;
+  $("stWatch").textContent = watch;
+  $("stHigh").textContent = high;
+  $("stats").classList.toggle("show", hosts.length > 0 || fileChips.length > 0);
+  $("hostCount").textContent = hosts.length;
+}
+
+function serviceLabel(p){
+  var bits = [p.service || "unknown"];
+  var extra = [p.product, p.version, p.extrainfo].filter(Boolean).join(" ");
+  return { name: bits[0], extra: extra };
+}
+
+function renderOverview(hosts){
+  // Flags
+  var flags = [];
+  hosts.forEach(function(h){
+    openPorts(h).forEach(function(p){
+      var r = riskOf(p);
+      if (r === "high" || r === "med"){
+        var w = watchInfo(p);
+        flags.push({ level:r, ip:h.ip, hostname:h.hostname, port:p, why: w ? w.why : "", label: w ? w.label : p.service });
+      }
+    });
+  });
+  flags.sort(function(a,b){
+    var rank = {high:0, med:1};
+    return (rank[a.level]-rank[b.level]) || (ipNum(a.ip)-ipNum(b.ip)) || (a.port.port-b.port.port);
+  });
+  if (!flags.length){
+    $("flagList").innerHTML = '<div class="ok-box">No watchlist ports open in the loaded scans. Telnet, SNMP, UPnP, plain MQTT and friends are all absent — that\'s the good outcome.</div>';
+  } else {
+    $("flagList").innerHTML = flags.slice(0, 40).map(function(f){
+      return '<div class="flag-row"><span class="risk ' + f.level + '">' + (f.level==="high"?"HIGH":"CHECK") + '</span>' +
+        '<div class="txt"><strong>' + esc(f.label) + '</strong> open on <span class="mono">' + esc(f.ip) + '</span>' +
+        (f.hostname ? ' (' + esc(f.hostname) + ')' : '') +
+        '<div class="where">port ' + f.port.port + '/' + f.port.protocol + (f.port.service ? ' · ' + esc(f.port.service) : '') + (f.why ? ' — ' + esc(f.why) : '') + '</div></div></div>';
+    }).join("") + (flags.length > 40 ? '<p class="sec-sub" style="margin-top:10px">…and ' + (flags.length-40) + ' more in the Hosts tab.</p>' : "");
+  }
+
+  // Service bars
+  var svc = {};
+  hosts.forEach(function(h){ openPorts(h).forEach(function(p){ var s = p.service || "unknown"; svc[s] = (svc[s]||0)+1; }); });
+  var svcList = Object.keys(svc).map(function(k){ return {name:k, count:svc[k]}; }).sort(function(a,b){ return b.count-a.count; });
+  var max = svcList.length ? svcList[0].count : 1;
+  $("svcBars").innerHTML = svcList.length ? svcList.slice(0,14).map(function(s){
+    return '<div class="bar-row"><span class="svc">' + esc(s.name) + '</span><span class="bar-track"><span class="bar-fill" style="display:block;width:' + Math.round(s.count/max*100) + '%"></span></span><span class="c">' + s.count + '</span></div>';
+  }).join("") : '<p class="sec-sub" style="margin:0">No open ports recorded yet.</p>';
+
+  // Watchlist table
+  var watchRows = Object.keys(WATCH).map(function(k){
+    var parts = k.split("/"); var port = parseInt(parts[0],10), proto = parts[1];
+    var found = [];
+    hosts.forEach(function(h){
+      openPorts(h).forEach(function(p){ if (p.port===port && p.protocol===proto) found.push(h.ip); });
+    });
+    return { key:k, info:WATCH[k], found:found };
+  }).filter(function(r){ return r.found.length > 0; });
+  if (!watchRows.length){
+    $("watchList").innerHTML = '<p class="sec-sub" style="margin:0">None of the watchlist ports are open in the loaded scans.</p>';
+  } else {
+    $("watchList").innerHTML = watchRows.map(function(r){
+      return '<div class="flag-row"><span class="risk ' + r.info.level + '">' + r.key.toUpperCase() + '</span>' +
+        '<div class="txt"><strong>' + esc(r.info.label) + '</strong> — on ' + r.found.length + (r.found.length===1 ? " host" : " hosts") +
+        '<div class="where">' + r.found.map(esc).join(", ") + '</div></div></div>';
+    }).join("");
+  }
+}
+
+function portRowHTML(p, diffMark){
+  var sl = serviceLabel(p);
+  var r = riskOf(p);
+  var scripts = (p.scripts||[]).map(function(s){
+    return '<div class="script-out"><b>' + esc(s.id) + ':</b> ' + esc(s.output) + '</div>';
+  }).join("");
+  return '<tr><td class="mono" style="font-weight:700;white-space:nowrap">' + p.port + '/' + p.protocol + (diffMark ? ' ' + diffMark : '') + '</td>' +
+    '<td>' + esc(sl.name) + (sl.extra ? '<div style="color:var(--muted);font-size:12px">' + esc(sl.extra) + '</div>' : '') + scripts + '</td>' +
+    '<td><span class="risk ' + r + '">' + r.toUpperCase() + '</span></td></tr>';
+}
+
+function renderHosts(hosts){
+  var q = ($("hostSearch").value || "").toLowerCase();
+  var filter = $("hostFilter").value;
+  var sort = $("hostSort").value;
+  var list = hosts.filter(function(h){
+    var ops = openPorts(h);
+    if (filter === "flagged" && !ops.some(function(p){ return riskOf(p) !== "low"; })) return false;
+    if (filter === "up" && h.status !== "up") return false;
+    if (filter === "withports" && !ops.length) return false;
+    if (q){
+      var hay = (h.ip + " " + h.hostname + " " + h.vendor + " " + h.os + " " + ops.map(function(p){ return p.service + " " + p.port; }).join(" ")).toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  if (sort === "ports") list.sort(function(a,b){ return openPorts(b).length - openPorts(a).length || ipNum(a.ip)-ipNum(b.ip); });
+  else if (sort === "risk") list.sort(function(a,b){ return riskScore(b) - riskScore(a) || ipNum(a.ip)-ipNum(b.ip); });
+  else list.sort(function(a,b){ return ipNum(a.ip)-ipNum(b.ip); });
+
+  $("hostEmpty").style.display = list.length ? "none" : "block";
+  $("hostList").innerHTML = list.map(function(h){
+    var ops = openPorts(h);
+    var other = h.portList.filter(function(p){ return p.state !== "open"; });
+    var flagged = ops.filter(function(p){ return riskOf(p) === "high"; }).length;
+    var badges = '<span class="badge ' + (h.status === "up" ? "up\">UP" : "down\">" + esc(h.status || "seen")) + '</span>';
+    if (flagged) badges += '<span class="badge" style="background:var(--red-bg);color:var(--red)">' + flagged + ' HIGH-RISK</span>';
+    var kv = "";
+    var kvItems = [
+      ["Hostname", h.hostname || "—"], ["MAC", h.mac || "—"], ["Vendor", h.vendor || "—"],
+      ["OS (best guess)", h.os || h.osDetails || "—"], ["Hops away", h.distance || "—"],
+      ["Seen in", h.sources.join(", ") || "—"]
+    ];
+    kv = '<div class="kv">' + kvItems.map(function(it){ return '<div><div class="k">' + esc(it[0]) + '</div><div class="v">' + esc(it[1]) + '</div></div>'; }).join("") + '</div>';
+    var table = ops.length ?
+      '<table class="ports"><thead><tr><th>Port</th><th>Service</th><th>Risk</th></tr></thead><tbody>' + ops.map(function(p){ return portRowHTML(p, ""); }).join("") + '</tbody></table>' :
+      '<p class="noports">No open ports recorded for this host in the loaded scans.' + (h.status === "up" ? ' It answered discovery but no profile scan covered it — run profile.sh against it for the port detail.' : '') + '</p>';
+    var otherNote = other.length ? '<p class="noports" style="margin-top:8px">Also seen, not open: ' + other.map(function(p){ return p.port + "/" + p.protocol + " (" + p.state + ")"; }).join(", ") + '</p>' : "";
+    var hs = h.hostScripts.length ? h.hostScripts.map(function(s){ return '<div class="script-out"><b>' + esc(s.id) + ':</b> ' + esc(s.output) + '</div>'; }).join("") : "";
+    return '<article class="host" data-ip="' + esc(h.ip) + '"><button type="button" class="host-head" aria-expanded="false">' +
+      '<span><span class="ip">' + esc(h.ip) + '</span>' + (h.hostname ? '<div class="hn">' + esc(h.hostname) + '</div>' : '') +
+      '<span class="badges">' + badges + '</span></span>' +
+      '<span class="right"><span class="pcount">' + ops.length + (ops.length===1 ? " port" : " ports") + '</span><div class="chev">▾ details</div></span></button>' +
+      '<div class="host-body">' + kv + table + otherNote + hs + '</div></article>';
+  }).join("");
+
+  // expand/collapse
+  Array.prototype.forEach.call(document.querySelectorAll(".host-head"), function(btn){
+    btn.addEventListener("click", function(){
+      var art = btn.parentElement;
+      var open = art.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      btn.querySelector(".chev").textContent = open ? "▴ hide" : "▾ details";
+    });
+  });
+}
+
+/* ---------- Diff ---------- */
+function dsLabel(ds){
+  var kindName = {xml:"profile scan", gnmap:"discovery", baseline:"baseline.json", nmap:"scan"}[ds.kind] || ds.kind;
+  return ds.fileName + " (" + kindName + ", " + Object.keys(ds.hosts).length + " hosts)";
+}
+function renderDiffSelectors(){
+  var base = $("baseSel"), cur = $("curSel");
+  var prevB = base.value, prevC = cur.value;
+  base.innerHTML = ""; cur.innerHTML = "";
+  datasets.forEach(function(ds){
+    var o1 = document.createElement("option"); o1.value = ds.id; o1.textContent = dsLabel(ds); base.appendChild(o1);
+    var o2 = document.createElement("option"); o2.value = ds.id; o2.textContent = dsLabel(ds); cur.appendChild(o2);
+  });
+  var ready = datasets.length >= 2;
+  $("diffReady").style.display = ready ? "block" : "none";
+  $("diffEmpty").style.display = ready ? "none" : "block";
+  if (!ready){ $("changeCount").textContent = "–"; return; }
+  // defaults: baseline.json first if present, else oldest; current = newest non-baseline
+  var baseDs = datasets.filter(function(d){ return d.kind === "baseline"; })[0] || datasets[0];
+  var curDs = datasets[datasets.length-1] === baseDs ? datasets[0] : datasets[datasets.length-1];
+  base.value = prevB && datasets.some(function(d){ return String(d.id)===prevB; }) ? prevB : baseDs.id;
+  cur.value = prevC && datasets.some(function(d){ return String(d.id)===prevC; }) && prevC !== base.value ? prevC : curDs.id;
+  if (base.value === cur.value){
+    var other = datasets.filter(function(d){ return String(d.id) !== base.value; })[0];
+    if (other) cur.value = other.id;
+  }
+  renderDiff();
+}
+function openPortMap(host){
+  var m = {};
+  if (!host) return m;
+  host.portList.forEach(function(p){ if (p.state === "open") m[portKey(p)] = p; });
+  return m;
+}
+function renderDiff(){
+  var bId = parseInt($("baseSel").value,10), cId = parseInt($("curSel").value,10);
+  var bDs = datasets.filter(function(d){ return d.id===bId; })[0];
+  var cDs = datasets.filter(function(d){ return d.id===cId; })[0];
+  if (!bDs || !cDs){ $("diffOut").innerHTML = ""; return; }
+  var newHosts = [], goneHosts = [], changed = [];
+  var totalChanges = 0;
+  Object.keys(cDs.hosts).forEach(function(ip){ if (!bDs.hosts[ip]) newHosts.push(ip); });
+  Object.keys(bDs.hosts).forEach(function(ip){ if (!cDs.hosts[ip]) goneHosts.push(ip); });
+  newHosts.sort(function(a,b){ return ipNum(a)-ipNum(b); });
+  goneHosts.sort(function(a,b){ return ipNum(a)-ipNum(b); });
+  totalChanges += newHosts.length + goneHosts.length;
+  Object.keys(cDs.hosts).forEach(function(ip){
+    if (!bDs.hosts[ip]) return;
+    var bm = openPortMap(bDs.hosts[ip]), cm = openPortMap(cDs.hosts[ip]);
+    var np = Object.keys(cm).filter(function(k){ return !bm[k]; });
+    var cp = Object.keys(bm).filter(function(k){ return !cm[k]; });
+    var ch = Object.keys(cm).filter(function(k){
+      return bm[k] && ((bm[k].service||"") !== (cm[k].service||"") || (bm[k].version||"") !== (cm[k].version||""));
+    });
+    if (np.length || cp.length || ch.length){
+      changed.push({ ip:ip, hostname:cDs.hosts[ip].hostname, newPorts:np, closedPorts:cp, changedPorts:ch, bm:bm, cm:cm });
+      totalChanges += np.length + cp.length + ch.length;
+    }
+  });
+  changed.sort(function(a,b){ return ipNum(a.ip)-ipNum(b.ip); });
+  $("changeCount").textContent = totalChanges;
+
+  if (!totalChanges){
+    $("diffOut").innerHTML = '<div class="ok-box">No differences. Every host, port and service version in ' + esc(cDs.fileName) + ' matches ' + esc(bDs.fileName) + '.</div>';
+    return;
+  }
+  var html = "";
+  if (newHosts.length){
+    html += '<div class="diff-group"><h3><span class="badge new">NEW</span> Hosts not in the baseline (' + newHosts.length + ')</h3>' +
+      newHosts.map(function(ip){
+        var h = cDs.hosts[ip]; var ops = openPorts(h);
+        return '<div class="diff-item"><span class="mono" style="font-weight:700">' + esc(ip) + '</span>' + (h.hostname ? ' · ' + esc(h.hostname) : '') +
+          '<div class="ports-line">' + (ops.length ? ops.map(function(p){ return p.port + "/" + p.protocol + " " + (p.service||""); }).join(" · ") : "no open ports recorded") + '</div></div>';
+      }).join("") + '</div>';
+  }
+  if (goneHosts.length){
+    html += '<div class="diff-group"><h3><span class="badge gone">GONE</span> Hosts missing from the new scan (' + goneHosts.length + ')</h3>' +
+      goneHosts.map(function(ip){
+        var h = bDs.hosts[ip];
+        return '<div class="diff-item"><span class="mono" style="font-weight:700">' + esc(ip) + '</span>' + (h.hostname ? ' · ' + esc(h.hostname) : '') + ' — was in the baseline, not in the latest scan. Offline, unplugged, or renamed off the network.</div>';
+      }).join("") + '</div>';
+  }
+  if (changed.length){
+    html += '<div class="diff-group"><h3>Port changes on known hosts</h3>' + changed.map(function(c){
+      var lines = "";
+      if (c.newPorts.length) lines += '<div class="ports-line"><span class="badge new">OPENED</span> ' + c.newPorts.map(function(k){ var p = c.cm[k]; return p.port + "/" + p.protocol + " (" + (p.service||"unknown") + ")"; }).join(", ") + '</div>';
+      if (c.closedPorts.length) lines += '<div class="ports-line"><span class="badge gone">CLOSED</span> ' + c.closedPorts.map(function(k){ var p = c.bm[k]; return p.port + "/" + p.protocol + " (" + (p.service||"unknown") + ")"; }).join(", ") + '</div>';
+      if (c.changedPorts.length) lines += '<div class="ports-line"><span class="badge" style="background:var(--amber-bg);color:var(--amber)">CHANGED</span> ' + c.changedPorts.map(function(k){
+        var a = c.bm[k], b = c.cm[k];
+        return b.port + "/" + b.protocol + ": " + (a.service||"?") + " " + (a.version||"") + " → " + (b.service||"?") + " " + (b.version||"");
+      }).join(", ") + '</div>';
+      return '<div class="diff-item"><span class="mono" style="font-weight:700">' + esc(c.ip) + '</span>' + (c.hostname ? ' · ' + esc(c.hostname) : '') + lines + '</div>';
+    }).join("") + '</div>';
+  }
+  $("diffOut").innerHTML = html;
+}
+
+/* ---------- Report ---------- */
+function buildReport(hosts){
+  var lines = [];
+  lines.push("IoT Network Analysis Report");
+  lines.push("Generated: " + new Date().toLocaleString());
+  lines.push("Source files: " + fileChips.filter(function(c){ return !c.error; }).map(function(c){ return c.name; }).join(", "));
+  lines.push("=".repeat(60));
+  var totalPorts = 0, high = 0;
+  hosts.forEach(function(h){ openPorts(h).forEach(function(p){ totalPorts++; if (riskOf(p)==="high") high++; }); });
+  lines.push("");
+  lines.push("Summary: " + hosts.length + " hosts · " + totalPorts + " open ports · " + high + " high-risk ports");
+  hosts.forEach(function(h){
+    lines.push("");
+    lines.push("Host: " + h.ip + (h.hostname ? " (" + h.hostname + ")" : ""));
+    if (h.status) lines.push("  Status: " + h.status);
+    if (h.mac) lines.push("  MAC: " + h.mac + (h.vendor ? " (" + h.vendor + ")" : ""));
+    if (h.os || h.osDetails) lines.push("  OS: " + (h.os || h.osDetails));
+    var ops = openPorts(h);
+    lines.push("  Open Ports:");
+    if (!ops.length) lines.push("    (none recorded)");
+    ops.forEach(function(p){
+      var sl = serviceLabel(p);
+      var w = watchInfo(p);
+      lines.push("    " + p.port + "/" + p.protocol + " — " + sl.name + (sl.extra ? " " + sl.extra : "") + (w && riskOf(p)==="high" ? "   <-- HIGH RISK: " + w.label : ""));
+      (p.scripts||[]).forEach(function(s){ lines.push("      [" + s.id + "] " + s.output); });
+    });
+  });
+  lines.push("");
+  lines.push("=".repeat(60));
+  lines.push("Generated by IoT Network Dashboard from the loaded scan files.");
+  return lines.join("\n");
+}
+function renderReport(hosts){
+  $("reportPre").textContent = hosts.length ? buildReport(hosts) : "Load scan files to generate the report — it follows the same layout as report.py: one block per host, OS guess, then open ports with service and version.";
+  var raw = $("rawReports");
+  if (reportFiles.length){
+    raw.innerHTML = reportFiles.map(function(r){
+      return '<div class="raw-report"><h2 class="sec">' + esc(r.name) + '</h2><p class="sec-sub">Uploaded as-is from report.py output.</p><pre class="report">' + esc(r.text) + '</pre></div>';
+    }).join("");
+  } else raw.innerHTML = "";
+}
+
+/* ---------- Master render ---------- */
+function renderAll(){
+  var hosts = mergedHosts();
+  var has = fileChips.length > 0;
+  $("startEmpty").style.display = has ? "none" : "block";
+  $("workbench").classList.toggle("show", has);
+  renderChips();
+  renderStats(hosts);
+  renderOverview(hosts);
+  renderHosts(hosts);
+  renderDiffSelectors();
+  renderReport(hosts);
+}
+
+/* ---------- Events ---------- */
+var dz = $("dropZone");
+["dragenter","dragover"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.add("drag"); }); });
+["dragleave","drop"].forEach(function(ev){ dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.remove("drag"); }); });
+dz.addEventListener("drop", function(e){
+  var files = Array.prototype.slice.call(e.dataTransfer.files || []);
+  if (files.length) ingest(files);
+});
+$("pickFilesBtn").addEventListener("click", function(){ $("fileInput").click(); });
+$("pickFolderBtn").addEventListener("click", function(){ $("folderInput").click(); });
+$("fileInput").addEventListener("change", function(){ ingest(Array.prototype.slice.call(this.files)); this.value = ""; });
+$("folderInput").addEventListener("change", function(){
+  var files = Array.prototype.slice.call(this.files).filter(function(f){
+    return /\.(xml|gnmap|txt|json|nmap)$/i.test(f.name);
+  });
+  if (!files.length) toast("No scan files found in that folder");
+  else ingest(files);
+  this.value = "";
+});
+function ingest(files){
+  var usable = files.filter(function(f){ return !f.name.startsWith("."); });
+  Promise.all(usable.map(handleFile)).then(function(){
+    renderAll();
+    var ok = fileChips.filter(function(c){ return !c.error; }).length;
+    toast(usable.length + (usable.length===1 ? " file" : " files") + " read · " + mergedHosts().length + " hosts in inventory");
+  });
+}
+$("chips").addEventListener("click", function(e){
+  var btn = e.target.closest("[data-remove]");
+  if (!btn) return;
+  // Rebuilding from scratch is the only honest way to drop one file's contribution:
+  toast("To drop one file, use Clear all and reload the rest — contributions from merged scans can't be unmixed reliably.");
+});
+$("clearBtn").addEventListener("click", function(){
+  datasets = []; liveSet = {}; liveSources = []; reportFiles = []; fileChips = [];
+  $("hostSearch").value = "";
+  renderAll();
+  toast("Cleared — load scan files to start again");
+});
+Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(tab){
+  tab.addEventListener("click", function(){
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(t){ t.setAttribute("aria-selected","false"); });
+    Array.prototype.forEach.call(document.querySelectorAll(".panel"), function(p){ p.classList.remove("active"); });
+    tab.setAttribute("aria-selected","true");
+    $("panel-" + tab.getAttribute("data-tab")).classList.add("active");
+  });
+});
+["hostSearch","hostFilter","hostSort"].forEach(function(id){
+  $(id).addEventListener("input", function(){ renderHosts(mergedHosts()); });
+  $(id).addEventListener("change", function(){ renderHosts(mergedHosts()); });
+});
+$("baseSel").addEventListener("change", renderDiff);
+$("curSel").addEventListener("change", renderDiff);
+$("dlReportBtn").addEventListener("click", function(){
+  var hosts = mergedHosts();
+  if (!hosts.length){ toast("Load scan files first"); return; }
+  var blob = new Blob([buildReport(hosts)], { type:"text/plain" });
+  var a = document.createElement("a");
+  var d = new Date();
+  var stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
+  a.href = URL.createObjectURL(blob);
+  a.download = "report_" + stamp + ".txt";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+});
+$("copyReportBtn").addEventListener("click", function(){
+  var hosts = mergedHosts();
+  if (!hosts.length){ toast("Load scan files first"); return; }
+  var text = buildReport(hosts);
+  function done(){ toast("Report copied"); }
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch(e){ toast("Copy blocked here — use Download instead"); }
+    ta.remove();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+  else fallback();
+});
+
+renderAll();
+})();
+</script>
+</body>
+</html>
